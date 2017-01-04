@@ -18,6 +18,7 @@ license-file = "LICENSE"
 name = "frustum_query"
 path = "src/lib.rs"
 doc = true
+crate-type = ["rlib"]
 
 [features]
 default = []

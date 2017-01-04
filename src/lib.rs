@@ -1,12 +1,15 @@
 // Copyright (C) 2017 Chris Liebert
 
+#![crate_name = "frustum_query"]
+#![crate_type = "rlib"]
+
 #[cfg(feature = "multithreaded_rayon")]
 extern crate time;
 #[cfg(feature = "multithreaded_rayon")]
 extern crate rayon;
 
-mod frustum;
-mod query;
+pub mod frustum;
+pub mod query;
 
 #[cfg(test)]
 mod tests {

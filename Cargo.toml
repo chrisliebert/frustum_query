@@ -1,0 +1,25 @@
+# Copyright (C) 2017 Chris Liebert
+
+[package]
+name = "frustum_query"
+version = "0.1.0"
+authors = ["Chris Liebert", "Mark Morley (derived works, see http://www.racer.nl/reference/vfc_markmorley.htm)"]
+keywords = ["3D", "graphics"]
+description = "A frustum culling framework from 3D graphics applications."
+include = [
+	"src/frustum.rs",
+	"src/lib.rs",
+	"src/query.rs",
+	"Cargo.toml",
+]
+readme = "README.md"
+repository = "https://github.com/chrisliebert/frustum_query.git"
+license-file = "LICENSE"
+
+[features]
+default = []
+multithreaded_rayon = ["rayon", "time"]
+
+[dependencies]
+rayon = { version = "*", optional = true}
+time = { version = "*", optional = true}

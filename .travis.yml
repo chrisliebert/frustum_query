@@ -5,8 +5,10 @@ after_success: |-
   cargo doc &&
   echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
   sudo pip install ghp-import &&
+  cd docs &&
   ghp-import -n target/doc &&
-  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git frustum_query
+  cd .. &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git master
 env:
   global:
     secure: FKGJf7XAFFnnB8g2uJHjUhhhRN+lPUaP3LJdHE1zQxpBld3Tc7h88CfrqSTV7OiQ5+42PC3KD/91w2DC6ywV2CyxiBtMEf3iyYPW98ib/lpzlCybS6+BaudImeHDpnB6qOwmCl1+LHNwVfqz5YjW6H0gSUR/dfIrr8ubH5o1E47pIuOewpZF0djyQ6IFd3PjHIaV2+gJCr41EV8h8pwPSLAtrHmyvHDcqE7yGePu7eVfB0s2iXPLxjeJ/vGCnj4einzbEprMKc/EcEyraoLCQWDv5XsB4i4S4mz/XsDu3u9LebXspOjUsJZGO9zgx5ryTslAsV74Kl4t6DXx3Jxeiihy+B7W/7vz+y9RI2PvpjkleI8IBkwYYWF2DIKSv3A/4SELlydCNglZUMXZc2OuSCl8iGL1KST630FuvH/cj+N0wip1br1Nhyjf6GG0Fgtwyffo07S5N3zdzXXEC6CAjDhcf109Lx13nhUv4B+Rn/hvQiq7JySdU75P3EfGDSxUHSj8ysODRpfqypcMD5Eeb/OKEGXhdn315g2ub9yss3uUzBFeYBpqa7t33EK564aTaztJlJnSFYGgVwn4iZK3n2SV6hksLscpOUx9pTXROMsg7IJFOPS0kgLjBrWEzkKi5rjM0vrlOu+6dbx7FqFX/Wl0egQWU4IRnRNa8WC+ENY=

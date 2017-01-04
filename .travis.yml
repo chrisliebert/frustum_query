@@ -6,7 +6,7 @@ after_success: |-
   echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
   sudo pip install ghp-import &&
   cd docs &&
-  ghp-import -n target/doc &&
+  ghp-import -n ../target/doc &&
   cd .. &&
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git master
 env:

@@ -15,6 +15,7 @@ repository = "https://github.com/chrisliebert/frustum_query.git"
 license-file = "LICENSE"
 documentation = "https://chrisliebert.github.io/frustum_query"
 homepage = "https://github.com/chrisliebert/frustum_query"
+license = "MIT"
 
 [lib]
 name = "frustum_query"

@@ -1,8 +1,7 @@
 Copyright(C) 2017 Chris Liebert
+[Documentation](https://chrisliebert.github.io/frustum_query)
 
 [![Build Status](https://travis-ci.org/chrisliebert/frustum_query.svg?branch=master)](https://travis-ci.org/chrisliebert/frustum_query) 
-
-[Documentation](https://chrisliebert.github.io/frustum_query)
 
 **frustum_query**
 

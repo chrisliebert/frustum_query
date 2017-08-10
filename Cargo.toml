@@ -5,7 +5,7 @@ name = "frustum_query"
 version = "0.1.2"
 authors = ["Chris Liebert", "Mark Morley (derived works, see http://www.racer.nl/reference/vfc_markmorley.htm)"]
 keywords = ["3D", "graphics"]
-description = "A frustum culling framework from 3D graphics applications."
+description = "A frustum culling framework for 3D graphics applications."
 include = [
 	"src/*.rs",
 	"Cargo.toml",

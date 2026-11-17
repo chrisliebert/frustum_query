@@ -4,8 +4,6 @@
 #![crate_type = "rlib"]
 
 #[cfg(feature = "multithreaded_rayon")]
-extern crate time;
-#[cfg(feature = "multithreaded_rayon")]
 extern crate rayon;
 
 pub mod frustum;
@@ -13,9 +11,9 @@ pub mod query;
 
 #[cfg(test)]
 mod tests {
-    use frustum::Frustum;
-    use query::FrustumQuery;
-    use query::FrustumQueryObject;
+    use crate::frustum::Frustum;
+    use crate::query::FrustumQuery;
+    use crate::query::FrustumQueryObject;
     /// A basic unit test (no multithreading)
     
     fn get_test_objects(n: usize) -> Vec<FrustumQueryObject> {
@@ -58,7 +56,7 @@ mod tests {
     #[cfg(feature = "multithreaded_rayon")]
     #[test]
     fn multithreaded_compairison_rayon() {
-        use time::PreciseTime;
+        use std::time::Instant;
         let mvp: [f32; 16] = [1.0f32, 2.0f32, 3.0f32, 4.0f32, 5.0f32, 6.0f32, 7.0f32, 8.0f32, 9.0f32, 10.0f32, 11.0f32, 12.0f32, 13.0f32, 14.0f32, 15.0f32, 16.0f32];
         
         let frustum: Frustum = Frustum::from_modelview_projection(&mvp);
@@ -83,25 +81,79 @@ mod tests {
             query_result2.push(true);
         }
         
-        let start = PreciseTime::now();
+        let start = Instant::now();
         
         let frustum_query: FrustumQuery = FrustumQuery::new(objects.clone());
         
         frustum_query.execute(&frustum, &mut query_result1);
         
-        let end = PreciseTime::now();
-        let single_thread_time = start.to(end);
+        let _end = Instant::now();
+        let single_thread_time = start.elapsed();
         
         
-        let start = PreciseTime::now();
+        let start = Instant::now();
         
         frustum_query.execute_parallel_rayon(&frustum, &mut query_result2);
         
-        let end = PreciseTime::now();
-        let multi_thread_time = start.to(end);
+        let _end = Instant::now();
+        let multi_thread_time = start.elapsed();
         
-        println!("Single-threaded time:\t{}", single_thread_time);
-        println!("Multi-threaded time:\t{}", multi_thread_time);
+        println!("Single-threaded time:\t{:?}", single_thread_time);
+        println!("Multi-threaded time:\t{:?}", multi_thread_time);
         assert!(query_result1 == query_result2);   
+    }
+
+    #[cfg(feature = "simd")]
+    #[test]
+    fn simd_matches_scalar() {
+        let mvp: [f32; 16] = [1.0, 0.0, 0.0, 0.0,
+                              0.0, 1.0, 0.0, 0.0,
+                              0.0, 0.0, 1.0, 0.0,
+                              0.0, 0.0, 0.0, 1.0];
+        let frustum = Frustum::from_modelview_projection(&mvp);
+        let objects = get_test_objects(100); // 400 objects
+        let n = objects.len();
+        let mut scalar = vec![false; n];
+        let mut simd = vec![false; n];
+        let q = FrustumQuery::new(objects);
+        q.execute(&frustum, &mut scalar);
+        q.execute_simd(&frustum, &mut simd);
+        assert_eq!(scalar, simd, "SIMD path must match scalar path");
+    }
+
+    #[cfg(feature = "simd")]
+    #[test]
+    fn simd_performance_harness() {
+        use std::time::Instant;
+        let mvp: [f32; 16] = [1.0f32; 16];
+        let frustum = Frustum::from_modelview_projection(&mvp);
+        let n = 250_000; // 1 million objects
+        let objects = get_test_objects(n);
+        let num = objects.len();
+        let mut res_scalar = vec![false; num];
+        let mut res_simd = vec![false; num];
+        let q = FrustumQuery::new(objects);
+
+        // Warmup
+        q.execute(&frustum, &mut res_scalar);
+        q.execute_simd(&frustum, &mut res_simd);
+
+        let start = Instant::now();
+        for _ in 0..5 {
+            q.execute(&frustum, &mut res_scalar);
+        }
+        let scalar_t = start.elapsed() / 5;
+
+        let start = Instant::now();
+        for _ in 0..5 {
+            q.execute_simd(&frustum, &mut res_simd);
+        }
+        let simd_t = start.elapsed() / 5;
+
+        println!("Scalar: {:?}  SIMD: {:?}  speedup: {:.2}x",
+                 scalar_t, simd_t,
+                 scalar_t.as_secs_f64() / simd_t.as_secs_f64());
+        assert!(simd_t < scalar_t * 2, "SIMD should not be dramatically slower");
+        // Note: actual speedup depends on CPU features enabled at compile time
     }
 }

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Test (scalar)
+        run: cargo test --release
+
+      - name: Test (SIMD + Rayon)
+        run: cargo test --features "simd multithreaded_rayon" --release
+
+      - name: Test SIMD harness
+        run: cargo test --features simd --release -- --nocapture simd_performance_harness
+
+  # Optional: document AVX-512 on x86 only
+  avx512:
+    name: AVX-512 harness (x86)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run AVX-512 harness
+        run: |
+          RUSTFLAGS="-C target-feature=+avx512f,+avx512dq,+avx512vl,+avx512bw" \
+            cargo test --features simd --release -- --nocapture simd_performance_harness
+        continue-on-error: true  # not all runners have AVX-512

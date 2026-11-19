@@ -11,7 +11,7 @@
 #[derive(Debug)]
 pub struct Frustum {
     // right left bottom top near and far planes
-    planes:	[[f32; 4]; 6],
+    pub(crate) planes: [[f32; 4]; 6],
 }
 
 #[allow(unused)]
@@ -38,7 +38,7 @@ impl Frustum {
 
         // Divisor to normilize left plane
         let ld: f32 = (ldx.powi(2) + ldy.powi(2) + ldz.powi(2)).sqrt();
-        debug_assert!(rd > 0.0f32, "Invalid modelview projection matrix: left plane divisor cannot be 0");
+        debug_assert!(ld > 0.0f32, "Invalid modelview projection matrix: left plane divisor cannot be 0");
 
         // Extract the BOTTOM plane
         let bdx: f32 = clip[3] + clip[1];
@@ -48,7 +48,7 @@ impl Frustum {
 
         // Divisor to normilize bottom plane
         let bd: f32 = (bdx.powi(2) + bdy.powi(2) + bdz.powi(2)).sqrt();
-        debug_assert!(rd > 0.0f32, "Invalid modelview projection matrix: bottom plane divisor cannot be 0");
+        debug_assert!(bd > 0.0f32, "Invalid modelview projection matrix: bottom plane divisor cannot be 0");
 
         // Extract the TOP plane
         let tdx: f32 = clip[3] - clip[1];
@@ -58,7 +58,7 @@ impl Frustum {
 
         // Divisor to normilize top plane
         let td: f32 = (tdx.powi(2) + tdy.powi(2) + tdz.powi(2)).sqrt();
-        debug_assert!(rd > 0.0f32, "Invalid modelview projection matrix: top plane divisor cannot be 0");
+        debug_assert!(td > 0.0f32, "Invalid modelview projection matrix: top plane divisor cannot be 0");
 
         // Extract the FAR plane
         let fdx: f32 = clip[3] - clip[2];
@@ -68,7 +68,7 @@ impl Frustum {
 
         // Divisor to normilize far plane
         let fd: f32 = (fdx.powi(2) + fdy.powi(2) + fdz.powi(2)).sqrt();
-        debug_assert!(rd > 0.0f32, "Invalid modelview projection matrix: far plane divisor cannot be 0");
+        debug_assert!(fd > 0.0f32, "Invalid modelview projection matrix: far plane divisor cannot be 0");
 
         // Extract the NEAR plane
         let ndx: f32 = clip[3] + clip[2];
@@ -78,15 +78,19 @@ impl Frustum {
 
         // Divisor to normilize near plane
         let nd: f32 = (ndx.powi(2) + ndy.powi(2) + ndz.powi(2)).sqrt();
-        debug_assert!(rd > 0.0f32, "Invalid modelview projection matrix: near plane divisor cannot be 0");
+        debug_assert!(nd > 0.0f32, "Invalid modelview projection matrix: near plane divisor cannot be 0");
 
+        // Guard against zero-length plane normals (degenerate matrices).
+        // In debug builds the asserts above catch this; in release we produce
+        // a zero plane which will fail all intersection tests rather than emit NaNs.
+        let safe_div = |num: f32, den: f32| if den.abs() > 1e-12 { num / den } else { 0.0 };
         Frustum {
-            planes: [[rdx / rd, rdy / rd, rdz / rd, rdw / rd],
-                     [ldx / ld, ldy / ld, ldz / ld, ldw / ld],
-                     [bdx / bd, bdy / bd, bdz / bd, bdw / bd],
-                     [tdx / td, tdy / td, tdz / td, tdw / td],
-                     [fdx / fd, fdy / fd, fdz / fd, fdw / fd],
-                     [ndx / nd, ndy / nd, ndz / nd, ndw / nd]],
+            planes: [[safe_div(rdx, rd), safe_div(rdy, rd), safe_div(rdz, rd), safe_div(rdw, rd)],
+                     [safe_div(ldx, ld), safe_div(ldy, ld), safe_div(ldz, ld), safe_div(ldw, ld)],
+                     [safe_div(bdx, bd), safe_div(bdy, bd), safe_div(bdz, bd), safe_div(bdw, bd)],
+                     [safe_div(tdx, td), safe_div(tdy, td), safe_div(tdz, td), safe_div(tdw, td)],
+                     [safe_div(fdx, fd), safe_div(fdy, fd), safe_div(fdz, fd), safe_div(fdw, fd)],
+                     [safe_div(ndx, nd), safe_div(ndy, nd), safe_div(ndz, nd), safe_div(ndw, nd)]],
         }
     }
     
@@ -171,9 +175,12 @@ impl Frustum {
 
     /// A sphere is intersecting the renderable region of the frustum
     ///
+    #[inline]
     pub fn sphere_intersecting(&self, x: &f32, y: &f32, z: &f32, r: &f32) -> bool {
+        let neg_r = -*r;
         for p in 0..6 {
-            if self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z + self.planes[p][3] <= (0.0f32 - r) {
+            let pl = &self.planes[p];
+            if pl[0] * *x + pl[1] * *y + pl[2] * *z + pl[3] <= neg_r {
                 return false;
             }
         }

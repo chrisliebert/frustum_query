@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["FrustumQuery","`FrustumQueryObject`"],["FrustumQueryObject","`FrustumQueryObject`"]]});
+window.SIDEBAR_ITEMS = {"struct":["FrustumQuery","FrustumQueryObject"]};

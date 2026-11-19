@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["frustum",""],["query",""]]});
+window.SIDEBAR_ITEMS = {"mod":["frustum","query"]};
